@@ -1,6 +1,7 @@
 {
     "name": "swift-shop-mern",
     "version": "1.0.0",
+    "license": "MIT",
     "description": "MERN E-commerce Platform",
     "main": "server/server.js",
     "type": "module",
