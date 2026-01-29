@@ -1,9 +1,10 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Components
 import Header from './components/Header';
+import Footer from './components/Footer'; // ✅ Successfully imported
 import AdminRoute from './components/AdminRoute';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -14,13 +15,15 @@ import Cart from './pages/Cart';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminAddProduct from './pages/AdminAddProduct';
-import AdminOrderList from './pages/AdminOrderList'; // 🚀 New: Admin Management
+import AdminOrderList from './pages/AdminOrderList';
+import NewArrivals from './pages/NewArrivals'; 
+import BestSellers from './pages/BestSellers';   
 
 // Feature Pages
 import Profile from './pages/Profile';
 import OrderDetails from './pages/OrderDetails';
-import Shipping from './pages/Shipping'; // 🚀 New: Shipping Address Entry
-import PlaceOrder from './pages/PlaceOrder'; // 🚀 New: Final Summary
+import Shipping from './pages/Shipping';
+import PlaceOrder from './pages/PlaceOrder';
 import ShippingPolicy from './pages/ShippingPolicy';
 import TermsOfService from './pages/TermsOfService';
 
@@ -34,7 +37,7 @@ function App() {
       <main className="min-h-[80vh] bg-gray-50/50 py-8">
         <div className="container mx-auto px-4 md:px-6">
           <Routes>
-            {/* --- Public Routes --- */}
+            {/* --- Public & Search Routes --- */}
             <Route path="/" element={<Home />} />
             <Route path="/search/:keyword" element={<Home />} /> 
             <Route path="/product/:id" element={<ProductDetails />} />
@@ -42,54 +45,34 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* --- 📦 Checkout & Order Routes --- */}
+            {/* --- 🚀 Collection Filters --- */}
+            <Route path="/new-arrivals" element={<NewArrivals />} />
+            <Route path="/best-sellers" element={<BestSellers />} />
+
+            {/* --- 📦 Checkout & Account --- */}
             <Route path="/shipping" element={<Shipping />} />
             <Route path="/placeorder" element={<PlaceOrder />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/order/:id" element={<OrderDetails />} />
             
-            {/* --- Support Routes --- */}
-            <Route path="/shipping-policy" element={<ShippingPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
+            {/* --- 🛡️ Support & Policy --- */}
+            <Route path="/shippingpolicy" element={<ShippingPolicy />} />
+            <Route path="/termsofservice" element={<TermsOfService />} />
 
             {/* --- 🔒 Protected Admin Routes --- */}
             <Route path="" element={<AdminRoute />}>
               <Route path='/admin/add' element={<AdminAddProduct />} />
-              <Route path='/admin/orders' element={<AdminOrderList />} /> {/* 🚀 New */}
+              <Route path='/admin/orders' element={<AdminOrderList />} />
             </Route>
 
+            {/* Catch-all redirect to Home */}
             <Route path="*" element={<Home />} /> 
           </Routes>
         </div>
       </main>
-      
-      <footer className="bg-white border-t border-gray-100 pt-16 pb-8 mt-20">
-        <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 text-left">
-          <div>
-            <h3 className="font-black text-black mb-6 uppercase text-xs tracking-[0.2em]">Shop</h3>
-            <ul className="space-y-4 text-sm text-gray-500 font-medium">
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">New Arrivals</Link></li>
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">Best Sellers</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-black text-black mb-6 uppercase text-xs tracking-[0.2em]">Support</h3>
-            <ul className="space-y-4 text-sm text-gray-500 font-medium">
-              <li><Link to="/shipping-policy" className="hover:text-blue-600 transition-colors">Shipping Policy</Link></li>
-              <li><Link to="/terms" className="hover:text-blue-600 transition-colors">Terms of Service</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-black text-black mb-6 uppercase text-xs tracking-[0.2em]">Contact</h3>
-            <p className="text-sm text-gray-500 font-medium">support@swiftshop.com</p>
-          </div>
-        </div>
-        <div className="container mx-auto px-6 mt-16 pt-8 border-t border-gray-50 text-center">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">
-            &copy; {new Date().getFullYear()} SWIFT SHOP. ALL RIGHTS RESERVED.
-          </p>
-        </div>
-      </footer>
+
+      {/* ✅ Footer component rendering here */}
+      <Footer />
     </Router>
   );
 }

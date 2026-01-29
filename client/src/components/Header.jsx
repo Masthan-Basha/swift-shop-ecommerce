@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiUser, FiSearch, FiLogOut, FiSettings, FiPackage, FiActivity } from 'react-icons/fi';
@@ -15,13 +15,22 @@ const Header = () => {
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
+  // 🚀 LIVE SEARCH LOGIC: 
+  // This triggers navigation as the user types
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setKeyword(value);
+    
+    if (value.trim()) {
+      navigate(`/search/${value.trim()}`);
+    } else {
+      navigate('/'); // Return to home if search is cleared
+    }
+  };
+
+  // Prevent form submission from reloading the page
   const submitHandler = (e) => {
     e.preventDefault();
-    if (keyword.trim()) {
-      navigate(`/search/${keyword}`);
-    } else {
-      navigate('/');
-    }
   };
 
   const logoutHandler = () => {
@@ -45,7 +54,7 @@ const Header = () => {
           <span className="text-black">SWIFT</span>SHOP
         </Link>
         
-        {/* Search Bar */}
+        {/* Search Bar - UPDATED for Live Search */}
         <form 
           onSubmit={submitHandler}
           className="hidden md:flex items-center bg-gray-50 border border-gray-100 px-4 py-2.5 rounded-2xl w-1/3 focus-within:ring-2 focus-within:ring-blue-500/10 focus-within:bg-white transition-all"
@@ -54,7 +63,7 @@ const Header = () => {
           <input 
             type="text" 
             value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
+            onChange={handleSearch} // 🚀 Changed from setKeyword to handleSearch
             placeholder="Search unique essentials..." 
             className="bg-transparent border-none focus:ring-0 w-full ml-3 text-sm font-medium outline-none placeholder:text-gray-400" 
           />
@@ -62,8 +71,6 @@ const Header = () => {
 
         {/* Actions Section */}
         <div className="flex items-center gap-2 md:gap-5">
-          
-          {/* 🚀 NEW: My Orders (Visible to logged in users) */}
           {userInfo && (
             <Link to="/profile" className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-xl transition-colors group">
               <FiPackage size={22} className="text-gray-700 group-hover:text-blue-600" />
@@ -87,7 +94,6 @@ const Header = () => {
                 <span className="text-sm font-bold text-gray-900">{userInfo.name.split(' ')[0]}</span>
               </div>
               
-              {/* 🚀 UPDATED: Admin Dashboard Quick-Links */}
               {userInfo.isAdmin && (
                 <div className="flex gap-2">
                   <Link title="Manage Orders" to="/admin/orders" className="p-2.5 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all">

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux'; // Added useSelector
 import { FiShoppingCart, FiCheck } from 'react-icons/fi'; // Added Check icon
 import { addToCart } from '../store/cartSlice';
-
 const Product = ({ product }) => {
   const dispatch = useDispatch();
   const [added, setAdded] = useState(false);

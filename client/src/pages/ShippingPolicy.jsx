@@ -1,50 +1,27 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { saveShippingAddress } from '../store/cartSlice';
+import React from 'react';
 
-const Shipping = () => {
-  const { shippingAddress } = useSelector((state) => state.cart);
-  const [address, setAddress] = useState(shippingAddress.address || '');
-  const [city, setCity] = useState(shippingAddress.city || '');
-  const [postalCode, setPostalCode] = useState(shippingAddress.postalCode || '');
-
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const submitHandler = (e) => {
-    e.preventDefault();
-    dispatch(saveShippingAddress({ address, city, postalCode }));
-    navigate('/placeorder');
-  };
-
+const ShippingPolicy = () => {
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-8 bg-white rounded-[2.5rem] shadow-xl">
-      <h1 className="text-3xl font-black mb-8 tracking-tighter">Shipping Destination</h1>
-      <form onSubmit={submitHandler} className="space-y-6">
-        <input 
-          type="text" placeholder="Address" value={address}
-          className="w-full p-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-blue-500"
-          onChange={(e) => setAddress(e.target.value)} required 
-        />
-        <div className="flex gap-4">
-          <input 
-            type="text" placeholder="City" value={city}
-            className="w-1/2 p-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-blue-500"
-            onChange={(e) => setCity(e.target.value)} required 
-          />
-          <input 
-            type="text" placeholder="Postal Code" value={postalCode}
-            className="w-1/2 p-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-blue-500"
-            onChange={(e) => setPostalCode(e.target.value)} required 
-          />
-        </div>
-        <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all">
-          Continue to Checkout
-        </button>
-      </form>
+    <div className="max-w-4xl mx-auto py-16 px-6 bg-white rounded-[3rem] shadow-sm my-10 border border-gray-50">
+      <h1 className="text-4xl font-black tracking-tighter mb-8 text-blue-600">Shipping Policy</h1>
+      <div className="space-y-8 text-gray-600 leading-relaxed">
+        <section>
+          <h2 className="text-xl font-bold text-black mb-2">Delivery Timelines</h2>
+          <p>We process all orders within 24 hours. Domestic shipping takes 3-5 business days.</p>
+        </section>
+        
+        <section>
+          <h2 className="text-xl font-bold text-black mb-2">Real-Time Tracking</h2>
+          <p>Once shipped, you can track your package directly from your Profile dashboard.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-bold text-black mb-2"> Important Note</h2>
+          <p>Please ensure your address is correct at checkout. We cannot change the destination once the order is "Shipped".</p>
+        </section>
+      </div>
     </div>
   );
 };
 
-export default Shipping;
+export default ShippingPolicy;

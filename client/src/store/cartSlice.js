@@ -4,12 +4,24 @@ const addDecimals = (num) => {
   return (Math.round(num * 100) / 100).toFixed(2);
 };
 
-// 🚀 Helper to calculate all totals
+// 🛡️ Helper for safe LocalStorage writing
+const safeSave = (key, data) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.error(`Storage limit reached for key: ${key}`, e);
+    if (e.name === 'QuotaExceededError') {
+      // Alert the user only once or log it
+      console.warn("Storage is full. Some data might not persist offline.");
+    }
+  }
+};
+
 const updatePrices = (state) => {
   state.itemsPrice = addDecimals(
     state.cartItems.reduce((acc, item) => {
-      const price = item?.price ? Number(item.price) : 0;
-      const qty = item?.qty ? Number(item.qty) : 1;
+      const price = Number(item?.price) || 0;
+      const qty = Number(item?.qty) || 1;
       return acc + price * qty;
     }, 0)
   );
@@ -24,7 +36,9 @@ const updatePrices = (state) => {
 };
 
 const initialState = {
-  cartItems: [],
+  cartItems: localStorage.getItem('cartItems') 
+    ? JSON.parse(localStorage.getItem('cartItems')) 
+    : [],
   manualProducts: localStorage.getItem('manualProducts') 
     ? JSON.parse(localStorage.getItem('manualProducts')) 
     : [],
@@ -34,7 +48,9 @@ const initialState = {
   shippingAddress: localStorage.getItem('shippingAddress')
     ? JSON.parse(localStorage.getItem('shippingAddress'))
     : {},
-  paymentMethod: 'PayPal',
+  paymentMethod: localStorage.getItem('paymentMethod')
+    ? JSON.parse(localStorage.getItem('paymentMethod'))
+    : 'UPI', 
   itemsPrice: 0,
   shippingPrice: 0,
   taxPrice: 0,
@@ -45,10 +61,10 @@ const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    // 🚀 Added back: Required for Login/Header
     setCart: (state, action) => {
       state.cartItems = Array.isArray(action.payload) ? action.payload : [];
       updatePrices(state);
+      safeSave('cartItems', state.cartItems);
     },
 
     addToCart: (state, action) => {
@@ -63,7 +79,10 @@ const cartSlice = createSlice({
         state.cartItems = [...state.cartItems, item];
       }
       updatePrices(state);
-      if (userEmail) localStorage.setItem(`cart_${userEmail}`, JSON.stringify(state.cartItems));
+      
+      // ✅ Using safeSave to prevent crashes
+      safeSave('cartItems', state.cartItems);
+      if (userEmail) safeSave(`cart_${userEmail}`, state.cartItems);
     },
 
     removeFromCart: (state, action) => {
@@ -71,18 +90,37 @@ const cartSlice = createSlice({
       const userEmail = action.payload.userEmail;
       state.cartItems = state.cartItems.filter((x) => x._id !== id);
       updatePrices(state);
-      if (userEmail) localStorage.setItem(`cart_${userEmail}`, JSON.stringify(state.cartItems));
+      
+      safeSave('cartItems', state.cartItems);
+      if (userEmail) safeSave(`cart_${userEmail}`, state.cartItems);
     },
 
-    // 🚀 Added back: Required for AdminAddProduct
     addManualProduct: (state, action) => {
-      state.manualProducts = [action.payload, ...state.manualProducts];
-      localStorage.setItem('manualProducts', JSON.stringify(state.manualProducts));
+      const exists = state.manualProducts.find(p => p._id === action.payload._id);
+      if (!exists) {
+        state.manualProducts = [action.payload, ...state.manualProducts];
+        safeSave('manualProducts', state.manualProducts);
+      }
+    },
+
+    deleteProduct: (state, action) => {
+      const id = action.payload;
+      state.manualProducts = state.manualProducts.filter((p) => p._id !== id);
+      state.cartItems = state.cartItems.filter((item) => item._id !== id);
+      
+      safeSave('manualProducts', state.manualProducts);
+      safeSave('cartItems', state.cartItems);
+      updatePrices(state);
     },
 
     saveShippingAddress: (state, action) => {
       state.shippingAddress = action.payload;
-      localStorage.setItem('shippingAddress', JSON.stringify(action.payload));
+      safeSave('shippingAddress', action.payload);
+    },
+
+    savePaymentMethod: (state, action) => {
+      state.paymentMethod = action.payload;
+      safeSave('paymentMethod', action.payload);
     },
 
     createOrder: (state, action) => {
@@ -97,17 +135,18 @@ const cartSlice = createSlice({
         taxPrice: state.taxPrice,
         shippingPrice: state.shippingPrice,
         totalPrice: state.totalPrice,
-        isPaid: true,
-        paidAt: new Date().toISOString(),
+        isPaid: state.paymentMethod === 'UPI', 
+        paidAt: state.paymentMethod === 'UPI' ? new Date().toISOString() : null,
         isDelivered: false,
         status: 'Processing',
         trackingHistory: [{ status: 'Order Placed', time: new Date().toISOString() }]
       };
 
-      state.orders.push(newOrder);
-      localStorage.setItem('all_orders', JSON.stringify(state.orders));
+      state.orders = [newOrder, ...state.orders];
+      safeSave('all_orders', state.orders);
       
       state.cartItems = [];
+      localStorage.removeItem('cartItems');
       if (userEmail) localStorage.removeItem(`cart_${userEmail}`);
       updatePrices(state);
     },
@@ -120,18 +159,21 @@ const cartSlice = createSlice({
         if (newStatus === 'Delivered') {
           order.isDelivered = true;
           order.deliveredAt = new Date().toISOString();
+          if (order.paymentMethod === 'COD') {
+            order.isPaid = true;
+            order.paidAt = new Date().toISOString();
+          }
         }
         order.trackingHistory.push({ status: newStatus, time: new Date().toISOString() });
-        localStorage.setItem('all_orders', JSON.stringify(state.orders));
+        safeSave('all_orders', state.orders);
       }
     },
 
     requestReturn: (state, action) => {
-      const orderId = action.payload;
-      const order = state.orders.find((o) => o._id === orderId);
+      const order = state.orders.find((o) => o._id === action.payload);
       if (order) {
         order.status = 'Return Requested';
-        localStorage.setItem('all_orders', JSON.stringify(state.orders));
+        safeSave('all_orders', state.orders);
       }
     },
 
@@ -140,25 +182,26 @@ const cartSlice = createSlice({
       const order = state.orders.find((o) => o._id === orderId);
       if (order) {
         order.status = decision;
-        localStorage.setItem('all_orders', JSON.stringify(state.orders));
+        safeSave('all_orders', state.orders);
       }
     },
 
-    // 🚀 Added back: Required for Login/Logout
     clearCartItems: (state) => {
       state.cartItems = [];
       updatePrices(state);
+      localStorage.removeItem('cartItems');
     },
   },
 });
 
-// 🚀 ESSENTIAL: Exporting all actions used in Header, Login, and Admin pages
 export const { 
   setCart,
   addToCart, 
   removeFromCart, 
   addManualProduct,
+  deleteProduct,
   saveShippingAddress, 
+  savePaymentMethod, 
   createOrder, 
   requestReturn,
   updateOrderStatus, 
