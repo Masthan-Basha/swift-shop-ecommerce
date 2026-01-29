@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiUser, FiSearch, FiLogOut, FiSettings, FiPackage, FiActivity } from 'react-icons/fi';
@@ -15,8 +15,6 @@ const Header = () => {
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
-  // 🚀 LIVE SEARCH LOGIC: 
-  // This triggers navigation as the user types
   const handleSearch = (e) => {
     const value = e.target.value;
     setKeyword(value);
@@ -24,19 +22,33 @@ const Header = () => {
     if (value.trim()) {
       navigate(`/search/${value.trim()}`);
     } else {
-      navigate('/'); // Return to home if search is cleared
+      navigate('/');
     }
   };
 
-  // Prevent form submission from reloading the page
   const submitHandler = (e) => {
     e.preventDefault();
   };
 
+  // ✅ FIXED: Storage-safe Logout Handler
   const logoutHandler = () => {
-    if (userInfo && userInfo.email) {
-      localStorage.setItem(`cart_${userInfo.email}`, JSON.stringify(cartItems));
+    try {
+      if (userInfo && userInfo.email) {
+        // Slim down the data to fit in storage
+        const slimCart = cartItems.map(item => ({
+          _id: item._id,
+          qty: item.qty,
+          name: item.name,
+          price: item.price,
+          image: item.image
+        }));
+        localStorage.setItem(`cart_${userInfo.email}`, JSON.stringify(slimCart));
+      }
+    } catch (e) {
+      console.error("Quota exceeded, skipping cart save.");
     }
+
+    // Clear session data
     dispatch(logout()); 
     dispatch(clearCartItems()); 
     navigate('/login');
@@ -54,7 +66,7 @@ const Header = () => {
           <span className="text-black">SWIFT</span>SHOP
         </Link>
         
-        {/* Search Bar - UPDATED for Live Search */}
+        {/* Search Bar */}
         <form 
           onSubmit={submitHandler}
           className="hidden md:flex items-center bg-gray-50 border border-gray-100 px-4 py-2.5 rounded-2xl w-1/3 focus-within:ring-2 focus-within:ring-blue-500/10 focus-within:bg-white transition-all"
@@ -63,7 +75,7 @@ const Header = () => {
           <input 
             type="text" 
             value={keyword}
-            onChange={handleSearch} // 🚀 Changed from setKeyword to handleSearch
+            onChange={handleSearch}
             placeholder="Search unique essentials..." 
             className="bg-transparent border-none focus:ring-0 w-full ml-3 text-sm font-medium outline-none placeholder:text-gray-400" 
           />
